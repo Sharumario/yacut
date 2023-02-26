@@ -3,7 +3,7 @@
 ## Установка:
 Клонировать репозиторий и перейти в него в командной строке:
 ```
-git clone 
+git clone git@github.com:Sharumario/yacut.git
 ```
 ```
 cd yacut
@@ -34,19 +34,9 @@ FLASK_ENV=development
 DATABASE_URI=sqlite:///db.sqlite3
 SECRET_KEY=YOUR_SECRET_KEY
 ```
-Создайте базу данных через команду
+Примените миграции командой:
 ```
-flask shell
-```
-```
-from opinions_app import db
-```
-```
-db.create_all()
-```
-Выйдите из интерактивной оболочки shell
-```
-exit()
+flask db migrate
 ```
 Запускаем и пользуемся через команду
 ```
@@ -54,16 +44,19 @@ flask run
 ```
 
 ## Работа с API
-Доступны два эндпоинта:  
-api/id/ - POST запрос  
-Пример POST запроса:  
+API проекта доступен всем желающим. Сервис обслуживает только два эндпоинта:  
+
+/api/id/ — POST-запрос на создание новой короткой ссылки;  
+/api/id/<short_id>/ — GET-запрос на получение оригинальной ссылки по указанному короткому   идентификатору.  
+
+Примеры запросов к API, варианты ответов и ошибок приведены в спецификации openapi.yml
+Пример POST - запроса:  
 ```
 {
 "url": "string",
 "custom_id": "string"
 }
 ```
-api/id/short_id/ - GET запрос  
 Пример ответа на GET запрос:  
 ```
 {"url": "string"}
