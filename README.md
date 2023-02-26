@@ -54,17 +54,17 @@ flask run
 ```
 
 ## Работа с API
-Доступны два эндпоинта:
-api/id/ - POST запрос /n
-Пример POST запроса: /n
+Доступны два эндпоинта:  
+api/id/ - POST запрос  
+Пример POST запроса:  
 ```
 {
 "url": "string",
 "custom_id": "string"
 }
 ```
-api/id/short_id/ - GET запрос /n
-Пример ответа на GET запрос: /n
+api/id/short_id/ - GET запрос  
+Пример ответа на GET запрос:  
 ```
 {"url": "string"}
 ```
