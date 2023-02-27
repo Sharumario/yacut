@@ -3,10 +3,18 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired, Length, Optional, Regexp, URL
 
 from settings import (
-    MAX_ORIGINAL_SIZE, MAX_SHORT_SIZE, ERROR_MAX_SIZE, ERROR_UNCORRECT_URL,
-    ERROR_REGEXP, ERROR_REQUIRED_FIELD, FIELD_ORIGINAL_LINK, FIELD_CUSTOM_ID,
-    FIELD_SUBMIT, REGEXP
+    ERROR_UNCORRECT_URL, MAX_ORIGINAL_SIZE, MAX_SHORT_SIZE,
+    PATTERN_FOR_SHORT_ID
 )
+
+
+ERROR_MAX_SIZE = 'Длина поля не должна превышать 16 символов.'
+ERROR_REQUIRED_FIELD = 'Обязательное поле.'
+ERROR_PATTERN_FOR_SHORT_ID = ('Идентификатор может состоять только '
+                              'из латинских букв и цифр.')
+FIELD_ORIGINAL_LINK = 'Оригинальная длинная ссылка'
+FIELD_CUSTOM_ID = 'Ваш вариант короткой ссылки'
+FIELD_SUBMIT = 'Добавить'
 
 
 class URLMapForm(FlaskForm):
@@ -23,7 +31,9 @@ class URLMapForm(FlaskForm):
         validators=(
             Length(max=MAX_SHORT_SIZE, message=ERROR_MAX_SIZE,),
             Optional(),
-            Regexp(REGEXP, message=(ERROR_REGEXP),),
+            Regexp(PATTERN_FOR_SHORT_ID, message=(
+                ERROR_PATTERN_FOR_SHORT_ID),
+            ),
         ),
     )
     submit = SubmitField(FIELD_SUBMIT)

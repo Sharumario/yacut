@@ -4,13 +4,18 @@ import urllib.parse
 from datetime import datetime
 
 from yacut import db
-from yacut.error_handlers import raise_thrower
+from yacut.error_handlers import GenarationShortIdError, raise_thrower
 from settings import (
-    ERROR_GET_SHORT_ID, ERROR_UNCORRECT_URL, ERROR_REPEAT_NAME,
-    MAX_ORIGINAL_SIZE, MAX_SHORT_SIZE, MAX_RANDOM_SYMBOLS_SIZE, REGEXP,
-    RANDOM_ITERATION_ID, RANDOM_SYMBOLS, REQUEST_UNCORRECT_URL,
-    REQUEST_REPEAT_NAME
+    ERROR_UNCORRECT_URL, MAX_ORIGINAL_SIZE, MAX_SHORT_SIZE,
+    MAX_RANDOM_SYMBOLS_SIZE, PATTERN_FOR_SHORT_ID, RANDOM_ITERATION_ID,
+    RANDOM_SYMBOLS
 )
+
+
+ERROR_GET_SHORT_ID = 'Невозможно сгенерировать short_id'
+ERROR_REPEAT_NAME = 'Имя {custom_id} уже занято!'
+REQUEST_UNCORRECT_URL = 'Указано недопустимое имя для короткой ссылки'
+REQUEST_REPEAT_NAME = 'Имя "{custom_id}" уже занято.'
 
 
 class URLMap(db.Model):
@@ -24,12 +29,8 @@ class URLMap(db.Model):
     )
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def save_urlmap(self):
-        db.session.add(self)
-        db.session.commit()
-
     @staticmethod
-    def get_query_elememt(short_id):
+    def get_url_map(short_id):
         return URLMap.query.filter_by(short=short_id).first()
 
     @staticmethod
@@ -38,32 +39,40 @@ class URLMap(db.Model):
             short_id = "".join(
                 random.sample(RANDOM_SYMBOLS, MAX_RANDOM_SYMBOLS_SIZE)
             )
-            if URLMap.get_query_elememt(short_id) is None:
+            if URLMap.get_url_map(short_id) is None:
                 return short_id
-        raise ValueError(ERROR_GET_SHORT_ID)
+        raise GenarationShortIdError(ERROR_GET_SHORT_ID)
 
     @staticmethod
-    def create_and_validate(url, short_id, api=False):
-        if api:
+    def create_and_validate(url, short_id, validate=False):
+        if validate:
             raise_thrower(
                 len(url) > MAX_ORIGINAL_SIZE or
                 urllib.parse.urlsplit(url).scheme not in ['http', 'https'],
-                ERROR_UNCORRECT_URL
+                ERROR_UNCORRECT_URL,
+                throw='ValueError'
             )
         if not short_id:
             short_id = URLMap.get_unique_short_id()
-        elif api and short_id:
+        elif validate and short_id:
             raise_thrower(
-                len(short_id) > MAX_SHORT_SIZE or
-                not re.fullmatch(REGEXP, short_id), REQUEST_UNCORRECT_URL
+                len(short_id) > MAX_SHORT_SIZE or not re.fullmatch(
+                    PATTERN_FOR_SHORT_ID, short_id
+                ),
+                REQUEST_UNCORRECT_URL,
+                throw='ValueError'
             )
             raise_thrower(
-                URLMap.get_query_elememt(short_id),
-                REQUEST_REPEAT_NAME.format(custom_id=short_id)
+                URLMap.get_url_map(short_id),
+                REQUEST_REPEAT_NAME.format(custom_id=short_id),
+                throw='ValueError'
             )
-        else:
-            if URLMap.get_query_elememt(short_id):
-                raise ValueError(ERROR_REPEAT_NAME.format(custom_id=short_id))
+        raise_thrower(
+            URLMap.get_url_map(short_id),
+            ERROR_REPEAT_NAME.format(custom_id=short_id),
+            throw='ValueError'
+        )
         urlmap = URLMap(original=url, short=short_id)
-        urlmap.save_urlmap()
+        db.session.add(urlmap)
+        db.session.commit()
         return urlmap

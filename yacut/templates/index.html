@@ -40,7 +40,7 @@
             <p class="text-center">
               {% with messages = get_flashed_messages() %}
                 {% for message in messages %}
-                {{ message }}
+                  {{ message }}
                 {% endfor %}
               {% endwith %}
               {% if short_link %}

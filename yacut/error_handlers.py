@@ -3,6 +3,10 @@ from flask import jsonify, render_template
 from yacut import app, db
 
 
+class GenarationShortIdError(Exception):
+    pass
+
+
 class InvalidAPIUsage(Exception):
     status_code = 400
 
@@ -32,6 +36,8 @@ def internal_error(error):
     return render_template('500.html'), 500
 
 
-def raise_thrower(value, message, error_number=400):
-    if value:
+def raise_thrower(value, message, error_number=400, throw='Invalid'):
+    if value and throw == 'Invalid':
         raise InvalidAPIUsage(message, error_number)
+    if value and throw == 'ValueError':
+        raise ValueError(message)
