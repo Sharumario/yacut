@@ -2,9 +2,7 @@ from flask import jsonify, request, url_for
 
 
 from yacut import app
-from yacut.error_handlers import (
-    raise_thrower, GenarationShortIdError, InvalidAPIUsage
-)
+from yacut.error_handlers import GenarationShortIdError, InvalidAPIUsage
 from yacut.models import URLMap
 
 
@@ -16,8 +14,10 @@ REQUEST_NO_BODY = 'Отсутствует тело запроса'
 @app.route('/api/id/', methods=['POST'])
 def post_short_url():
     data = request.get_json()
-    raise_thrower(not data, REQUEST_NO_BODY)
-    raise_thrower('url' not in data, REQUEST_NO_URL)
+    if not data:
+        raise InvalidAPIUsage(REQUEST_NO_BODY)
+    if 'url' not in data:
+        raise InvalidAPIUsage(REQUEST_NO_URL)
     try:
         urlmap = URLMap.create_and_validate(
             data.get('url'), data.get('custom_id'), True
@@ -37,5 +37,6 @@ def post_short_url():
 @app.route('/api/id/<string:short_id>/', methods=['GET'])
 def get_original_url(short_id):
     urlmap = URLMap.get_url_map(short_id)
-    raise_thrower(not urlmap, ERROR_ID_NOT_FOUND, error_number=404)
+    if not urlmap:
+        raise InvalidAPIUsage(ERROR_ID_NOT_FOUND, 404)
     return jsonify({'url': urlmap.original}), 200

@@ -8,7 +8,7 @@ from settings import (
 )
 
 
-ERROR_MAX_SIZE = 'Длина поля не должна превышать 16 символов.'
+ERROR_MAX_SIZE = f'Длина поля не должна превышать {MAX_SHORT_SIZE} символов.'
 ERROR_REQUIRED_FIELD = 'Обязательное поле.'
 ERROR_PATTERN_FOR_SHORT_ID = ('Идентификатор может состоять только '
                               'из латинских букв и цифр.')

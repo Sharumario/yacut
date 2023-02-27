@@ -34,10 +34,3 @@ def page_not_found(error):
 def internal_error(error):
     db.session.rollback()
     return render_template('500.html'), 500
-
-
-def raise_thrower(value, message, error_number=400, throw='Invalid'):
-    if value and throw == 'Invalid':
-        raise InvalidAPIUsage(message, error_number)
-    if value and throw == 'ValueError':
-        raise ValueError(message)

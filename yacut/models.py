@@ -1,10 +1,11 @@
 import random
 import re
-import urllib.parse
 from datetime import datetime
 
+import validators
+
 from yacut import db
-from yacut.error_handlers import GenarationShortIdError, raise_thrower
+from yacut.error_handlers import GenarationShortIdError
 from settings import (
     ERROR_UNCORRECT_URL, MAX_ORIGINAL_SIZE, MAX_SHORT_SIZE,
     MAX_RANDOM_SYMBOLS_SIZE, PATTERN_FOR_SHORT_ID, RANDOM_ITERATION_ID,
@@ -36,7 +37,7 @@ class URLMap(db.Model):
     @staticmethod
     def get_unique_short_id():
         for _ in range(RANDOM_ITERATION_ID):
-            short_id = "".join(
+            short_id = ''.join(
                 random.sample(RANDOM_SYMBOLS, MAX_RANDOM_SYMBOLS_SIZE)
             )
             if URLMap.get_url_map(short_id) is None:
@@ -46,32 +47,22 @@ class URLMap(db.Model):
     @staticmethod
     def create_and_validate(url, short_id, validate=False):
         if validate:
-            raise_thrower(
-                len(url) > MAX_ORIGINAL_SIZE or
-                urllib.parse.urlsplit(url).scheme not in ['http', 'https'],
-                ERROR_UNCORRECT_URL,
-                throw='ValueError'
-            )
+            if len(url) > MAX_ORIGINAL_SIZE:
+                raise ValueError(ERROR_UNCORRECT_URL)
+            if not validators.url(url):
+                raise ValueError(ERROR_UNCORRECT_URL)
         if not short_id:
             short_id = URLMap.get_unique_short_id()
-        elif validate and short_id:
-            raise_thrower(
-                len(short_id) > MAX_SHORT_SIZE or not re.fullmatch(
-                    PATTERN_FOR_SHORT_ID, short_id
-                ),
-                REQUEST_UNCORRECT_URL,
-                throw='ValueError'
+        elif validate:
+            if len(short_id) > MAX_SHORT_SIZE:
+                raise ValueError(REQUEST_UNCORRECT_URL)
+            if not re.fullmatch(PATTERN_FOR_SHORT_ID, short_id):
+                raise ValueError(REQUEST_UNCORRECT_URL)
+        if URLMap.get_url_map(short_id):
+            raise ValueError(
+                ERROR_REPEAT_NAME.format(custom_id=short_id) if not validate
+                else REQUEST_REPEAT_NAME.format(custom_id=short_id)
             )
-            raise_thrower(
-                URLMap.get_url_map(short_id),
-                REQUEST_REPEAT_NAME.format(custom_id=short_id),
-                throw='ValueError'
-            )
-        raise_thrower(
-            URLMap.get_url_map(short_id),
-            ERROR_REPEAT_NAME.format(custom_id=short_id),
-            throw='ValueError'
-        )
         urlmap = URLMap(original=url, short=short_id)
         db.session.add(urlmap)
         db.session.commit()
